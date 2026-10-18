@@ -48,4 +48,22 @@ export class SessionStore {
 
     return removed;
   }
+
+  async closeAll(): Promise<void>{
+    const allIds: string[] = Array.from(this.sessions.keys());
+
+    for (let i:number = 0; i < allIds.length; i++){
+      const id = allIds[i];
+      
+      if(id){
+        const session = this.sessions.get(id);
+        
+        if(session != undefined){
+          this.sessions.delete(id);
+          await session.server.close();
+        }
+      }
+    }
+  }
+
 }

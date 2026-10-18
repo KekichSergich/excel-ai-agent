@@ -79,6 +79,26 @@ const sweepTimer = setInterval(async () => {
   }
 }, SWEEP_INTERVAL_MS);
 
-app.listen(PORT, HOST, () => {
-  console.error(`[mcp] listening on http://${HOST}:${PORT}`);
+const httpServer = app.listen(PORT, HOST, () => {
+    console.error(`[mcp] listening on http://${HOST}:${PORT}`);
 });
+
+let shuttingDown = false;
+
+async function shutdown(signal:string): Promise<void> {
+  if(shuttingDown){
+    return;
+  } 
+  shuttingDown = true;
+  console.error(`[mcp] ${signal} received, shutting down`);
+
+  clearInterval(sweepTimer);
+  await sessions.closeAll();
+  httpServer.close( () => {
+    console.error(`[mcp] stopped`);
+    process.exit(0);
+  });
+}
+
+process.on('SIGINT', () => void shutdown('SIGINT'));
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
